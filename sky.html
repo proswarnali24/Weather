@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #87ceeb, #e0f7fa);
+    }
+
+    /* Cloud styling */
+    .cloud {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: -60px 20px 80px rgba(0,0,0,0.05);
+      animation: moveClouds linear infinite;
+      opacity: 0.9;
+    }
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .cloud::before {
+      top: -40%;
+      left: -40%;
+    }
+    .cloud::after {
+      top: -20%;
+      left: 50%;
+    }
+
+    @keyframes moveClouds {
+      from { transform: translateX(-200px); }
+      to { transform: translateX(110vw); }
+    }
+
+    /* Different cloud sizes + speeds */
+    .cloud1 { width: 180px; height: 100px; top: 20%; left: -200px; animation-duration: 60s; }
+    .cloud2 { width: 120px; height: 70px; top: 40%; left: -200px; animation-duration: 80s; }
+    .cloud3 { width: 200px; height: 110px; top: 60%; left: -200px; animation-duration: 100s; }
+    .cloud4 { width: 150px; height: 90px; top: 30%; left: -200px; animation-duration: 70s; }
+
+    /* Rainbow */
+    .rainbow {
+      position: absolute;
+      bottom: -30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200%;
+      height: 200%;
+      border-radius: 50%;
+      background: conic-gradient(
+        red, orange, yellow, green, blue, indigo, violet, transparent 75%
+      );
+      filter: blur(30px) opacity(0.6);
+    }
+
+    /* Weather container */
+    .weather-container {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      text-align: center;
+      width: 340px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .weather-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    }
+
+    .weather-container h1 {
+      margin-bottom: 20px;
+      font-size: 28px;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    input {
+      padding: 12px;
+      width: 80%;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    button {
+      padding: 12px 25px;
+      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #17697f, #5cbcd4);
+      transform: scale(1.05);
+    }
+
+    .weather-result {
+      margin-top: 25px;
+      font-size: 18px;
+      color: #fff;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .weather-result img {
+      margin-top: 12px;
+      width: 70px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Rainbow -->
+  <div class="rainbow"></div>
+
+  <!-- Clouds -->
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+  <div class="cloud cloud4"></div>
+
+  <!-- Weather App -->
+  <div class="weather-container">
+    <h1>🌤️ Weather App</h1>
+    <input type="text" id="locationInput" placeholder="Enter location">
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weatherResult" class="weather-result"></div>
+  </div>
+
+  <script>
+    async function getWeather() {
+      const location = document.getElementById('locationInput').value;
+      const resultDiv = document.getElementById('weatherResult');
+
+      if (!location) {
+        resultDiv.innerHTML = `<p>Please enter a location.</p>`;
+        return;
+      }
+
+      const apiKey = 'e17c0b0663544c02b32202750250506';
+      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=yes`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          resultDiv.innerHTML = `<p>❌ Location not found. Try again.</p>`;
+          return;
+        }
+
+        const data = await response.json();
+        const { name, region, country } = data.location;
+        const { temp_c, condition, humidity, wind_kph } = data.current;
+
+        resultDiv.innerHTML = `
+          <p><strong>📍 ${name}, ${region}, ${country}</strong></p>
+          <p>🌡️ Temperature: <b>${temp_c}°C</b></p>
+          <p>☁️ Condition: ${condition.text}</p>
+          <p>💧 Humidity: ${humidity}%</p>
+          <p>🌬️ Wind: ${wind_kph} kph</p>
+          <img src="https:${condition.icon}" alt="Weather icon">
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<p>⚠️ Error fetching data. Please try later.</p>`;
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
